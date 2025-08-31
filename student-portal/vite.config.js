@@ -1,11 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['.trycloudflare.com', '.ngrok-free.app', '.loca.lt', 'localhost', true], 
+    allowedHosts: [
+      ".trycloudflare.com",
+      ".ngrok-free.app",
+      ".loca.lt",
+      "localhost",
+      true,
+    ],
+    base: "./",
     // or allow all (less secure, but fine for dev)
     // allowedHosts: true
   },
-})
+});
