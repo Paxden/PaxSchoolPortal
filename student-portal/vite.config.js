@@ -12,7 +12,12 @@ export default defineConfig({
       true,
     ],
     base: "./",
+    port: 5173,
     // or allow all (less secure, but fine for dev)
     // allowedHosts: true
+  },
+
+  build: {
+    outDir: "dist",
   },
 });
