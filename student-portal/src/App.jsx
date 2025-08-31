@@ -35,7 +35,7 @@ function App() {
       <Routes>
         {/* Admission routes */}
         <Route path="/admission" element={<AdmissionPage />}>
-          <Route path="apply" element={<AdmissionForm />} />
+          <Route index element={<AdmissionForm />} />
           <Route path="status" element={<StatusCheck />} />
         </Route>
 
