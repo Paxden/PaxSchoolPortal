@@ -1,15 +1,18 @@
 import axios from "axios";
 
-const isLocal = window.location.hostname === "localhost";
+// const isLocal = window.location.hostname === "localhost";
 
 const API = axios.create({
-  baseURL: isLocal
-    ? "http://localhost:5000/api"
-    : "https://paxschoolportal-backend.onrender.com/api", // replace with your tunnel URL
+  baseURL:
+    "https://paxschoolportal-backend.onrender.com/api", // replace with your tunnel URL
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+// ✅ Student Auth
+export const studentLogin = (loginData) =>
+  API.post("/students/login", loginData);
 
 // Faculties
 export const getFaculties = () => API.get("/faculties");
