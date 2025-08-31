@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import axios from "axios";
-import { FaBeer } from "react-icons/fa";
+import { FaGraduationCap } from "react-icons/fa"; // better icon for school
+import api from "../../Services/Api.js"; // centralized API instance
 
 const StudentLogin = () => {
   const [form, setForm] = useState({ email: "", studentId: "" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -14,33 +15,49 @@ const StudentLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      const res = await axios.post(`http://localhost:5000/api/students/login`, {
+      const res = await api.post("/students/login", {
         email: form.email,
         studentId: form.studentId,
       });
 
-      localStorage.setItem("studentInfo", JSON.stringify(res.data));
-      toast.success("Login successful!");
-      navigate("/student");
-    } catch {
-      toast.error("Invalid login credentials.");
+      if (res.data) {
+        localStorage.setItem("studentInfo", JSON.stringify(res.data));
+        toast.success("Login successful!");
+        navigate("/student");
+      }
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Invalid login credentials. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="">
+    <div>
+      {/* Navbar / Header */}
       <div className="bg-dark py-2 px-4">
-        <h2 className="d-flex align-items-center gap-2 text-light">
-          {" "}
-          <FaBeer /> <span>Pinecrest </span>
+        <h2 className="d-flex align-items-center gap-2 text-light m-0">
+          <FaGraduationCap /> <span>Pinecrest School</span>
         </h2>
       </div>
-      <div className="container rounded shadow p-3 w-50 mx-auto text-center border mt-5">
-        <h2>Student Login</h2>
-        <form onSubmit={handleSubmit} className="w-50 mx-auto mt-5">
-          <div className="mb-3">
-            <label>Email</label>
+
+      {/* Login Box */}
+      <div className="container rounded shadow p-4 w-50 mx-auto text-center border mt-5">
+        <h2 className="mb-4">Student Login</h2>
+
+        <form onSubmit={handleSubmit} className="w-75 mx-auto">
+          {/* Email */}
+          <div className="mb-3 text-start">
+            <label className="form-label fw-bold">Email</label>
             <input
               type="email"
               name="email"
@@ -51,8 +68,9 @@ const StudentLogin = () => {
             />
           </div>
 
-          <div className="mb-3">
-            <label>Student ID</label>
+          {/* Student ID */}
+          <div className="mb-3 text-start">
+            <label className="form-label fw-bold">Student ID</label>
             <input
               type="text"
               name="studentId"
@@ -63,7 +81,14 @@ const StudentLogin = () => {
             />
           </div>
 
-          <button className="btn btn-primary">Login</button>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="btn btn-primary w-100"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
         </form>
       </div>
     </div>

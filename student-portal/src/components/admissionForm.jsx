@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
+import { getFaculties, getDepartmentsByFaculty, applyAdmission } from "../Services/Api";
 
 const AdmissionForm = () => {
   const [faculties, setFaculties] = useState([]);
@@ -22,40 +22,46 @@ const AdmissionForm = () => {
   });
 
   const [status, setStatus] = useState(null);
+  const [step, setStep] = useState(1);
 
-  // Load all faculties on mount
+  // Load faculties on mount
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/faculties")
-      .then((res) => setFaculties(res.data))
-      .catch((err) => console.error("Error fetching faculties:", err));
+    const fetchFaculties = async () => {
+      try {
+        const { data } = await getFaculties();
+        setFaculties(data);
+      } catch (err) {
+        console.error("Error fetching faculties:", err);
+      }
+    };
+    fetchFaculties();
   }, []);
 
-  // Fetch departments when a faculty is selected
+  // Fetch departments when faculty changes
   const handleFacultyChange = async (e) => {
     const facultyId = e.target.value;
     setSelectedFaculty(facultyId);
     setFormData({ ...formData, department: "" });
 
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/faculties/${facultyId}/departments`
-      );
-      setDepartments(res.data.departments);
+      const { data } = await getDepartmentsByFaculty(facultyId);
+      setDepartments(data.departments);
     } catch (err) {
       console.error("Error fetching departments:", err);
       setDepartments([]);
     }
   };
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/admissions/apply", formData);
+      await applyAdmission(formData);
       setStatus("Application submitted successfully.");
       setFormData({
         fullName: "",
@@ -74,8 +80,6 @@ const AdmissionForm = () => {
       setStatus("Error submitting application. Check your input.");
     }
   };
-
-  const [step, setStep] = useState(1);
 
   // Animation variants
   const variants = {
@@ -107,7 +111,7 @@ const AdmissionForm = () => {
   return (
     <div className="shadow border mt-5 mx-auto rounded p-4 mt-3">
       <h4 className="text-center mb-4">Student Admission Application</h4>
-      {status && <div className="alert alert-info">{status} <div className="ms-3"><a href="admission/status">Check Status</a></div></div>}
+      {status && <div className="alert alert-info">{status} <div className="ms-3"><a href="/status">Check Status</a></div></div>}
       <form onSubmit={handleSubmit} className="row justify-content-center g-3">
         <AnimatePresence mode="wait">
           {step === 1 && (

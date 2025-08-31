@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Row,
   Col,
@@ -10,6 +9,12 @@ import {
   Alert,
   Container,
 } from "react-bootstrap";
+import {
+  getFaculties,
+  createFaculty,
+  getDepartmentsByFaculty,
+  createDepartment,
+} from "../../Services/Api"; // adjust path
 
 const FacultyDepartment = () => {
   const [faculties, setFaculties] = useState([]);
@@ -20,17 +25,16 @@ const FacultyDepartment = () => {
   const [departments, setDepartments] = useState([]);
   const [alert, setAlert] = useState({ show: false, message: "", type: "" });
 
-  // Show alert message
+  // Show alert helper
   const showAlert = (message, type = "info") => {
     setAlert({ show: true, message, type });
     setTimeout(() => setAlert({ show: false, message: "", type: "" }), 3000);
   };
 
-  // Fetch all faculties
+  // Load faculties
   const fetchFaculties = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/faculties");
-      console.log("Faculties data:", data);
+      const { data } = await getFaculties();
       setFaculties(data);
     } catch (error) {
       console.error("Error fetching faculties", error);
@@ -38,28 +42,22 @@ const FacultyDepartment = () => {
     }
   };
 
-  // Fetch departments by faculty
+  // Load departments for selected faculty
   const fetchDepartments = async (facultyId) => {
     try {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/faculties/${facultyId}/departments`
-      );
-      console.log("Departments data:", data.departments);
-      setDepartments(data.departments);
+      const { data } = await getDepartmentsByFaculty(facultyId);
+      setDepartments(data.departments || data); // handle backend response
     } catch (error) {
       console.error("Error fetching departments", error);
       showAlert("Error fetching departments", "danger");
     }
   };
 
-  // Create faculty
+  // Submit new faculty
   const handleFacultySubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/faculties", {
-        name: facultyName,
-        code: facultyCode,
-      });
+      await createFaculty({ name: facultyName, code: facultyCode });
       setFacultyName("");
       setFacultyCode("");
       fetchFaculties();
@@ -70,7 +68,7 @@ const FacultyDepartment = () => {
     }
   };
 
-  // Create department under selected faculty
+  // Submit new department
   const handleDepartmentSubmit = async (e) => {
     e.preventDefault();
     if (!selectedFaculty) {
@@ -78,10 +76,7 @@ const FacultyDepartment = () => {
       return;
     }
     try {
-      await axios.post(
-        `http://localhost:5000/api/faculties/${selectedFaculty}/departments`,
-        { name: departmentName }
-      );
+      await createDepartment(selectedFaculty, { name: departmentName });
       setDepartmentName("");
       fetchDepartments(selectedFaculty);
       showAlert("Department created successfully!", "success");
@@ -110,7 +105,7 @@ const FacultyDepartment = () => {
       )}
 
       <Row className="gy-4">
-        {/* Faculty Creation */}
+        {/* Faculty Form */}
         <Col md={6}>
           <Card className="shadow-sm p-4">
             <Card.Body>
@@ -142,7 +137,7 @@ const FacultyDepartment = () => {
           </Card>
         </Col>
 
-        {/* Department Creation */}
+        {/* Department Form */}
         <Col md={6}>
           <Card className="shadow-sm p-4">
             <Card.Body>
@@ -184,7 +179,7 @@ const FacultyDepartment = () => {
         </Col>
       </Row>
 
-      {/* Faculty & Department Listing */}
+      {/* Lists */}
       <Row className="mt-5">
         <Col md={6}>
           <h5>📋 Faculties</h5>

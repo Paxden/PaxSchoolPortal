@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { checkAdmissionStatus } from "../Services/Api"; // import from central api.js
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 const StatusCheck = () => {
   const [email, setEmail] = useState("");
@@ -9,14 +11,12 @@ const StatusCheck = () => {
   const handleCheckStatus = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/admissions/status/${email}`
-      );
+      const res = await checkAdmissionStatus(email); // use api.js
       setResult(res.data);
       setError("");
     } catch {
       setResult(null);
-      setError("No application found for this email.");
+      setError("⚠️ No application found for this email.");
     }
   };
 
@@ -60,7 +60,7 @@ const StatusCheck = () => {
               <strong>Application Status:</strong>
               <span
                 className={`badge ms-2 ${
-                  result.applicationStatus === "approved"
+                  result.applicationStatus === "accepted"
                     ? "bg-success"
                     : result.applicationStatus === "pending"
                     ? "bg-warning text-dark"

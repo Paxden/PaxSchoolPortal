@@ -2,6 +2,9 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+// cloudflared tunnel Set-Alias cloudflared "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+// cloudflared tunnel --url http://localhost:5173
+
 // Components
 import ProtectRoute from "./Utils/ProtectRoute";
 // Pages

@@ -1,0 +1,7 @@
+ingress:
+  - hostname: myapp.trycloudflare.com
+    service: http://localhost:5173
+  - hostname: myapp.trycloudflare.com
+    path: /api/*
+    service: http://localhost:5000
+  - service: http_status:404
