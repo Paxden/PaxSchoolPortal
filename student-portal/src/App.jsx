@@ -28,11 +28,14 @@ import AdminCourses from "./pages/Admin/AdminCourses";
 import StudentCourseRegistration from "./pages/Student/CourseRegistration";
 import StudentFeePage from "./pages/Student/StudentFeePage";
 import StudentCBT from "./pages/Student/StudentCBT";
+import Home from "./pages/Home";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Home */}
+        <Route path="/" element={<Home />} />
         {/* Admission routes */}
         <Route path="/admission" element={<AdmissionPage />}>
           <Route path="apply" element={<AdmissionForm />} />
