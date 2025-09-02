@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import {
+  getCoursesByDepartment,
+  registerStudentCourses,
+  getRegisteredCourses,
+  refreshStudentData,
+} from "../../Services/Api"; // ✅ use API helpers
 
 const CourseRegistration = () => {
   const API_URL = "http://localhost:5000";
@@ -58,89 +63,44 @@ const CourseRegistration = () => {
     loadStudentData();
   }, []);
 
-  // Fetch courses for student's department
+  // Fetch courses
   const fetchCourses = useCallback(async () => {
-    console.log("Attempting to fetch courses...");
-
-    if (!student) {
-      console.error("Student data not loaded yet");
-      return;
-    }
-
-    if (!student.department?._id) {
-      const errMsg = "Department ID missing";
-      console.error(errMsg);
-      setError(errMsg);
-      return;
-    }
-
+    if (!student?.department?._id) return;
     try {
       setLoading((prev) => ({ ...prev, fetch: true }));
-      setError("");
-
-      const url = `${API_URL}/api/courses/department/${student.department._id}`;
-      console.log("Fetching from URL:", url);
-
-      const res = await axios.get(url, {
-        headers: { "Content-Type": "application/json" },
-        timeout: 10000, // 10 second timeout
-      });
-
-      console.log("Received courses data:", res.data);
-
-      if (!Array.isArray(res.data)) {
-        throw new Error("Invalid data format received from server");
-      }
-
-      setCourses(res.data);
+      const { data } = await getCoursesByDepartment(student.department._id);
+      setCourses(data || []);
     } catch (err) {
-      console.error("Course fetch error:", err);
-
-      let errorMessage = "Error fetching courses";
-      if (err.response) {
-        errorMessage =
-          err.response.data?.message || `Server error: ${err.response.status}`;
-      } else if (err.request) {
-        errorMessage = "No response from server. Please check your connection.";
-      } else {
-        errorMessage = err.message;
-      }
-
-      setError(errorMessage);
+      setError(err.response?.data?.message || "Error fetching courses");
     } finally {
       setLoading((prev) => ({ ...prev, fetch: false }));
     }
   }, [student]);
 
-  // Refresh student data
-  const refreshStudentData = useCallback(async () => {
+  // Refresh student
+  const refreshStudent = useCallback(async () => {
     if (!student?._id) return;
-
     try {
       setLoading((prev) => ({ ...prev, refresh: true }));
-      const res = await axios.get(`${API_URL}/api/students/${student._id}`);
-
-      localStorage.setItem("studentInfo", JSON.stringify(res.data));
-      setStudent(res.data);
+      const { data } = await refreshStudentData(student._id);
+      localStorage.setItem("studentInfo", JSON.stringify(data));
+      setStudent(data);
     } catch (err) {
-      console.error("Failed to refresh student data:", err);
+      console.error("Refresh failed:", err);
     } finally {
       setLoading((prev) => ({ ...prev, refresh: false }));
     }
   }, [student]);
 
-//   Fetch registered courses
-  const fetchRegisteredCourses = async () => {
+  // Fetch registered courses
+  const fetchRegisteredCoursesData = async () => {
     if (!student?._id) return;
     setLoadingRegistered(true);
     try {
-      const res = await axios.get(
-        `${API_URL}/api/students/courses/${student._id}`
-      );
-      setRegisteredCourses(res.data || []);
+      const { data } = await getRegisteredCourses(student._id);
+      setRegisteredCourses(data || []);
       setShowRegistered(true);
     } catch (err) {
-      console.error("Failed to fetch registered courses:", err);
       setError("Unable to load registered courses");
     } finally {
       setLoadingRegistered(false);
@@ -201,32 +161,24 @@ const CourseRegistration = () => {
     setShowConfirm(true);
   };
 
+  // Submit registration
   const handleSubmit = async () => {
     setShowConfirm(false);
     setLoading((prev) => ({ ...prev, submit: true }));
-
     try {
-      const response = await axios.put(
-        `${API_URL}/api/students/register-courses/${student._id}`,
-        { courseIds: selectedCourses },
-        { headers: { "Content-Type": "application/json" } }
+      const { data } = await registerStudentCourses(
+        student._id,
+        selectedCourses
       );
-
-      console.log("Registration response:", response.data);
-
-      if (response.data.warnings?.length) {
-        setError(response.data.warnings.join(", "));
+      if (data.warnings?.length) {
+        setError(data.warnings.join(", "));
       } else {
         setSubmitted(true);
-        setError("");
         setSelectedCourses([]);
-        await refreshStudentData();
+        await refreshStudent();
       }
     } catch (err) {
-      console.error("Registration error:", err);
-      const errorMessage =
-        err.response?.data?.message || "Failed to register courses";
-      setError(errorMessage);
+      setError(err.response?.data?.message || "Failed to register courses");
     } finally {
       setLoading((prev) => ({ ...prev, submit: false }));
     }
@@ -260,7 +212,7 @@ const CourseRegistration = () => {
               Department: <strong>{student.department?.name || "N/A"}</strong>
             </div>
             <button
-              onClick={fetchRegisteredCourses}
+              onClick={fetchRegisteredCoursesData}
               disabled={loadingRegistered}
               className="btn btn-sm btn-outline-primary ms-2"
             >

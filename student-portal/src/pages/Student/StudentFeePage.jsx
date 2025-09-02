@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { getStudentFees, markFeeAsPaid } from "../../Services/Api"; // <-- using your API file
 
 const StudentFeePage = () => {
   const [studentInfo, setStudentInfo] = useState(
@@ -11,19 +11,21 @@ const StudentFeePage = () => {
 
   const handlePay = async () => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/students/pay-fee/${studentInfo._id}`,
-        { session, semester, amount }
-      );
+      // ✅ Call API to mark fee as paid
+      await markFeeAsPaid(studentInfo._id, {
+        session,
+        semester,
+        amount,
+      });
 
-      // Fetch updated student data
-      const { data } = await axios.get(
-        `http://localhost:5000/api/students/${studentInfo._id}`
-      );
+      // ✅ Fetch updated student data
+      const { data } = await getStudentFees(studentInfo._id);
 
+      // save to local storage
       localStorage.setItem("studentInfo", JSON.stringify(data));
       setStudentInfo(data);
 
+      // reset form
       setAmount(0);
       setSession("2024/2025");
       setSemester("Harmattan");

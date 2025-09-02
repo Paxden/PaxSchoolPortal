@@ -1,18 +1,16 @@
+// src/Services/api.js
 import axios from "axios";
 
-// const isLocal = window.location.hostname === "localhost";
+const isLocal = window.location.hostname === "localhost";
 
 const API = axios.create({
-  baseURL:
-    "https://paxschoolportal-backend.onrender.com/api", // replace with your tunnel URL
+  baseURL: isLocal
+    ? "http://localhost:5000/api"
+    : "https://paxschoolportal-backend.onrender.com/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
-
-// ✅ Student Auth
-export const studentLogin = (loginData) =>
-  API.post("/students/login", loginData);
 
 // Faculties
 export const getFaculties = () => API.get("/faculties");
@@ -39,5 +37,22 @@ export const markFeeAsPaid = (studentId, feeId) =>
 export const approveFeePayment = (studentId, feeId) =>
   API.put(`/students/${studentId}/fees/${feeId}/approve`);
 
-// ✅ default export for generic requests
+// ✅ Student Auth
+export const studentLogin = (loginData) =>
+  API.post("/students/login", loginData);
+
+// ✅ Courses
+export const getCoursesByDepartment = (departmentId) =>
+  API.get(`/courses/department/${departmentId}`);
+
+export const registerStudentCourses = (studentId, courseIds) =>
+  API.put(`/students/register-courses/${studentId}`, { courseIds });
+
+export const getRegisteredCourses = (studentId) =>
+  API.get(`/students/courses/${studentId}`);
+
+export const refreshStudentData = (studentId) =>
+  API.get(`/students/${studentId}`);
+
+// ✅ default export
 export default API;
