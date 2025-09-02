@@ -11,7 +11,7 @@ function Applicants() {
   const fetchApplicants = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("https://paxschoolportal-backend.onrender.com/api");
+      const res = await axios.get("https://paxschoolportal-backend.onrender.com/api/admissions");
       setApplicants(res.data);
     } catch (err) {
       console.error("Error fetching applicants:", err);
@@ -25,12 +25,12 @@ function Applicants() {
   }, []);
 
   const handleApprove = async (id) => {
-    await axios.patch(`https://paxschoolportal-backend.onrender.com/api/${id}/accept`);
+    await axios.patch(`http://localhost:5000/api/admissions/${id}/accept`);
     fetchApplicants();
   };
 
   const handleReject = async (id) => {
-    await axios.patch(`https://paxschoolportal-backend.onrender.com/api/${id}/reject`);
+    await axios.patch(`http://localhost:5000/api/admissions/${id}/reject`);
     fetchApplicants();
   };
 
