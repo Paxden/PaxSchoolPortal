@@ -36,6 +36,9 @@ export const markFeeAsPaid = (studentId, feeId) =>
   API.put(`/students/${studentId}/fees/${feeId}/mark-paid`);
 export const approveFeePayment = (studentId, feeId) =>
   API.put(`/students/${studentId}/fees/${feeId}/approve`);
+// create new fee record (student paying)
+export const createStudentFee = (studentId, feeData) =>
+  API.post(`/students/${studentId}/fees`, feeData);
 
 // ✅ Student Auth
 export const studentLogin = (loginData) =>
