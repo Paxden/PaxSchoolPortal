@@ -13,7 +13,7 @@ const StudentList = () => {
       setLoading(true);
       setError(null);
       const res = await axios.get(
-        "http://localhost:5000/api/admissions/students"
+        "https://paxschoolportal-backend.onrender.com/api/admissions/students"
       );
       setStudents(res.data);
     } catch (err) {

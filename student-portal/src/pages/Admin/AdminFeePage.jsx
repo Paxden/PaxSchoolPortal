@@ -13,7 +13,7 @@ const AdminFeePage = () => {
         setLoading(true);
         setError(null);
         const res = await axios.get(
-          "http://localhost:5000/api/admissions/students"
+          "https://paxschoolportal-backend.onrender.com/api/admissions/students"
         );
         setStudents(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
@@ -29,7 +29,7 @@ const AdminFeePage = () => {
   const handleApprove = async (studentId, session, semester) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/admissions/approve-fee/${studentId}`,
+        `https://paxschoolportal-backend.onrender.com/api/students/${studentId}/fees/68b6fd1bb9a4b8babf93c491/approve`,
         {
           session,
           semester,

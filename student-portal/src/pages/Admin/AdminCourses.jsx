@@ -11,7 +11,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "https://paxschoolportal-backend.onrender.com/api";
 
 const AdminCoursesPage = () => {
   const [departments, setDepartments] = useState([]);
