@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const feeRoutes = require("./routes/feeRoutes");
+
 
 // Modules
 const facultyRoutes = require("./routes/facultyRoutes");
@@ -10,11 +10,15 @@ const departmentRoutes = require("./routes/departmentRoutes");
 const admissionRoutes = require("./routes/admissionRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const courseRoutes = require("./routes/courseRoute");
+const feeRoutes = require("./routes/feeRoutes");
 
-dotenv.config();
 
 // Express App
 const app = express();
+
+dotenv.config();
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Middleware
 app.use(cors());
@@ -34,6 +38,9 @@ app.use("/api/admissions", admissionRoutes);
 app.use("/api/students", studentRoutes);
 // Course Routes
 app.use("/api/courses", courseRoutes);
+// Fee Routes
+app.use("/api/fees", feeRoutes);
+
 
 console.log("Connecting to db ...");
 

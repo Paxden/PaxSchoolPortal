@@ -13,11 +13,26 @@ const Profile = () => {
     <div className="container w-100 py-5">
       <div className="card shadow-lg border-0 rounded-4 px-4 py-5 bg-light">
         <h3 className="text-center fw-bold mb-4">🎓 Student Profile</h3>
+
+        {/* Passport */}
+        {student.passport && (
+          <div className="text-center mb-4">
+            <img
+              src={`http://localhost:5000/uploads/${student.passport}`}
+              alt="Student Passport"
+              className="rounded-circle shadow"
+              style={{ width: "150px", height: "150px", objectFit: "cover" }}
+            />
+          </div>
+        )}
+
         <Row className="gy-4">
           <Col md={6}>
             <div className="bg-white rounded-3 shadow-sm p-3">
               <strong>Full Name:</strong>
-              <p className="mb-0">{student.fullName}</p>
+              <p className="mb-0">
+                {student.firstName} {student.otherName} {student.lastName}
+              </p>
             </div>
           </Col>
 
@@ -80,6 +95,8 @@ const Profile = () => {
             </Col>
           )}
         </Row>
+
+       
       </div>
     </div>
   );

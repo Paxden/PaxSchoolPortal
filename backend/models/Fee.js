@@ -1,39 +1,11 @@
 import mongoose from "mongoose";
 
-const feeSchema = new mongoose.Schema(
-  {
-    session: {
-      type: String,
-      required: true,
-    },
-    semester: {
-      type: String,
-      enum: ["Harmattan", "Rain"], // example semesters
-      required: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    studentsPaid: [
-      {
-        student: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Student",
-        },
-        status: {
-          type: String,
-          enum: ["Pending", "Paid", "Approved"],
-          default: "Paid",
-        },
-        paidAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-  },
-  { timestamps: true }
-);
+const feeSchema = new mongoose.Schema({
+  title: { type: String, required: true }, // e.g. "Tuition Fee"
+  session: { type: String, required: true }, // e.g. "2024/2025"
+  semester: { type: String, required: true }, // e.g. "First Semester"
+  amount: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now },
+});
 
 export default mongoose.model("Fee", feeSchema);

@@ -7,10 +7,18 @@ const API = axios.create({
   baseURL: isLocal
     ? "http://localhost:5000/api"
     : "https://paxschoolportal-backend.onrender.com/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
+
+// Request interceptor to handle multipart/form-data
+API.interceptors.request.use(
+  (config) => {
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Faculties
 export const getFaculties = () => API.get("/faculties");
@@ -25,26 +33,57 @@ export const createDepartment = (facultyId, deptData) =>
 
 // Admissions
 export const applyAdmission = (formData) =>
-  API.post("/admissions/apply", formData);
+  API.post("/admissions/apply", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
 export const checkAdmissionStatus = (email) =>
   API.get(`/admissions/status/${email}`);
+export const getApplicants = () => API.get("/admissions");
+export const approveApplicant = (id) => API.patch(`/admissions/${id}/accept`);
+export const rejectApplicant = (id) => API.patch(`/admissions/${id}/reject`);
+export const getStudents = async () => {
+  const res = await API.get("/admissions/students");
+  return res.data;
+};
 
-// Fees
-export const getStudentFees = (studentId) =>
-  API.get(`/students/${studentId}/fees`);
-export const markFeeAsPaid = (studentId, feeId) =>
-  API.put(`/students/${studentId}/fees/${feeId}/mark-paid`);
-export const approveFeePayment = (studentId, feeId) =>
-  API.put(`/students/${studentId}/fees/${feeId}/approve`);
-// create new fee record (student paying)
-export const createStudentFee = (studentId, feeData) =>
-  API.post(`/students/${studentId}/fees`, feeData);
+// =====================
+// Fees (Admin)
+// =====================
+export const createFee = (feeData) => API.post("/fees", feeData);
 
-// ✅ Student Auth
+export const getFees = () => API.get("/fees");
+
+export const verifyFee = (paymentId, status) =>
+  API.put(`/fees/verify/${paymentId}`, { status });
+
+export const getPaidStudents = (feeId) => API.get(`/fees/${feeId}/paid`);
+
+export const getUnpaidStudents = (feeId) => API.get(`/fees/${feeId}/unpaid`);
+
+export const getAllPayments = () => API.get("/fees/payments"); // NEW: fetch all payments for admin dashboard
+
+// =====================
+// Fees (Student)
+// =====================
+export const payFee = (studentId, formData) =>
+  API.post(`/fees/${studentId}/pay`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const getStudentPayments = (studentId) =>
+  API.get(`/fees/${studentId}/payments`); // NEW: student can see their own payment history
+export const getStudentById = (studentId) => API.get(`/students/${studentId}`);
+export const updateStudent = (studentId, studentData) =>
+  API.put(`/students/${studentId}`, studentData);
+export const deleteStudent = (studentId) =>
+  API.delete(`/students/${studentId}`);
+
+// Student Auth
 export const studentLogin = (loginData) =>
   API.post("/students/login", loginData);
 
-// ✅ Courses
+// Courses
 export const getCoursesByDepartment = (departmentId) =>
   API.get(`/courses/department/${departmentId}`);
 
@@ -57,5 +96,4 @@ export const getRegisteredCourses = (studentId) =>
 export const refreshStudentData = (studentId) =>
   API.get(`/students/${studentId}`);
 
-// ✅ default export
 export default API;

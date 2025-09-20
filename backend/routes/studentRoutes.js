@@ -7,7 +7,7 @@ const {
   getRegisteredCourses,
   payFee,
 } = require("../controllers/studentController");
-const  {
+const {
   getStudentFees,
   markFeeAsPaid,
   approveFeePayment,
@@ -29,14 +29,7 @@ router.get("/courses/:studentId", getRegisteredCourses);
 
 // Pay fees
 // create fees
-router.post("/:studentId/fees", createStudentFee);
-// GET student fees
-router.get("/:studentId/fees", getStudentFees);
+router.post("/:studentId/pay-fee", payFee);
 
-// PUT student mark fee as paid
-router.put("/:studentId/fees/:feeId/mark-paid", markFeeAsPaid);
-
-// PUT admin approve fee
-router.put("/:studentId/fees/:feeId/approve", approveFeePayment);
 
 module.exports = router;

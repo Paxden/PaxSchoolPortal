@@ -24,7 +24,8 @@ const StudentLogin = () => {
       });
 
       if (res.data) {
-        localStorage.setItem("studentInfo", JSON.stringify(res.data));
+        // ✅ Save in sessionStorage instead of localStorage
+        sessionStorage.setItem("studentInfo", JSON.stringify(res.data));
         toast.success("Login successful!");
         navigate("/student");
       }

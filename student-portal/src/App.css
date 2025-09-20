@@ -1,0 +1,16 @@
+.hover-bg-gray:hover {
+  background-color: #6c757d !important;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+@media (max-width: 767.98px) {
+  .bg-dark {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+  }
+}

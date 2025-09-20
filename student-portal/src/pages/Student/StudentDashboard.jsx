@@ -61,7 +61,9 @@ const StudentDashboard = () => {
                   {loading
                     ? "Loading..."
                     : registeredCourses.length > 0
-                    ? `course${registeredCourses.length > 1 ? "s" : ""} registered`
+                    ? `course${
+                        registeredCourses.length > 1 ? "s" : ""
+                      } registered`
                     : "No course registered"}
                 </p>
               </div>

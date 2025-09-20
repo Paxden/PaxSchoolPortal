@@ -20,7 +20,7 @@ const studentLogin = async (req, res) => {
     if (!student)
       return res.status(404).json({ message: "Invalid credentials" });
 
-    console.log("Student:", JSON.stringify(student, null, 2));
+    // console.log("Student:", JSON.stringify(student, null, 2));
 
     res.json(student);
   } catch (err) {
@@ -97,36 +97,60 @@ const getRegisteredCourses = async (req, res) => {
   }
 };
 
-// Paid fees
-// PUT /api/students/pay-fee/:studentId
+// Student pays tuition
 const payFee = async (req, res) => {
   try {
-    const { session, semester, amount } = req.body;
-    const student = await Student.findById(req.params.studentId);
+    const { studentId } = req.params;
+    const { feeId } = req.body; // tuition fee set by school
+    const receipt = req.file ? req.file.filename : null; // multer upload
 
+    const student = await Student.findById(studentId);
     if (!student) return res.status(404).json({ message: "Student not found" });
 
-    const existing = student.fees.find(
-      (f) => f.session === session && f.semester === semester
-    );
+    const fee = await Fee.findById(feeId);
+    if (!fee) return res.status(404).json({ message: "Fee not found" });
 
-    if (existing)
-      return res
-        .status(400)
-        .json({ message: "Fee already marked for this session/semester" });
-
+    // Add to student's record
     student.fees.push({
-      session,
-      semester,
-      amount,
-      status: "Paid",
-      paidDate: new Date(),
+      session: fee.session,
+      semester: fee.semester,
+      amount: fee.amount,
+      status: "Pending",
+      receipt,
+      paidAt: new Date(),
+    });
+
+    // Add to Fee collection (studentsPaid)
+    fee.studentsPaid.push({
+      student: student._id,
+      status: "Pending",
+      paidAt: new Date(),
     });
 
     await student.save();
-    res.status(200).json({ message: "Fee marked as paid", fees: student.fees });
+    await fee.save();
+
+    res.status(201).json({
+      message: "Fee submitted successfully, awaiting admin verification",
+      studentFees: student.fees,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Pay Fee Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Student payments
+ const getStudentPayments = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const student = await Student.findById(studentId).select("fees");
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    res.json(student.fees);
+  } catch (err) {
+    console.error("Get Student Payments Error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -136,4 +160,5 @@ module.exports = {
   getCoursesByDepartment,
   getRegisteredCourses,
   payFee,
+  getStudentPayments
 };

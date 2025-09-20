@@ -9,6 +9,8 @@ import {
   Card,
   Table,
   Spinner,
+  InputGroup,
+  Badge,
 } from "react-bootstrap";
 
 const API_BASE = "https://paxschoolportal-backend.onrender.com/api";
@@ -17,7 +19,9 @@ const AdminCoursesPage = () => {
   const [departments, setDepartments] = useState([]);
   const [selectedDept, setSelectedDept] = useState("");
   const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     code: "",
@@ -35,6 +39,21 @@ const AdminCoursesPage = () => {
     if (selectedDept) fetchCourses(selectedDept);
   }, [selectedDept]);
 
+  // Filter courses based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredCourses(courses);
+    } else {
+      const term = searchTerm.toLowerCase().trim();
+      const filtered = courses.filter(
+        (course) =>
+          course.title.toLowerCase().includes(term) ||
+          course.code.toLowerCase().includes(term)
+      );
+      setFilteredCourses(filtered);
+    }
+  }, [searchTerm, courses]);
+
   const fetchDepartments = async () => {
     try {
       const res = await axios.get(`${API_BASE}/departments`);
@@ -49,7 +68,9 @@ const AdminCoursesPage = () => {
       setLoading(true);
       const res = await axios.get(`${API_BASE}/courses/department/${deptId}`);
       setCourses(res.data);
+      setFilteredCourses(res.data);
       setLoading(false);
+      setSearchTerm(""); // Clear search when department changes
     } catch (err) {
       console.error("Error fetching courses", err);
       setLoading(false);
@@ -181,57 +202,126 @@ const AdminCoursesPage = () => {
         <Col md={8}>
           <Card>
             <Card.Body>
-              <h5>Courses List</h5>
-              <div className="w-25">
-                <Form.Group className="mb-2 col-6">
-                  <Form.Label>Filter by Department</Form.Label>
-                  <Form.Select
-                    value={selectedDept}
-                    onChange={(e) => setSelectedDept(e.target.value)}
-                    required
-                  >
-                    <option value="">-- Select Department --</option>
-                    {departments.map((dept) => (
-                      <option key={dept._id} value={dept._id}>
-                        {dept.name} ({dept.code})
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5>Courses List</h5>
+                {selectedDept && (
+                  <Badge bg="info" pill>
+                    {filteredCourses.length} of {courses.length} courses
+                  </Badge>
+                )}
               </div>
+
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Filter by Department</Form.Label>
+                    <Form.Select
+                      value={selectedDept}
+                      onChange={(e) => setSelectedDept(e.target.value)}
+                      required
+                    >
+                      <option value="">-- Select Department --</option>
+                      {departments.map((dept) => (
+                        <option key={dept._id} value={dept._id}>
+                          {dept.name} ({dept.code})
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Search Courses</Form.Label>
+                    <InputGroup>
+                      <InputGroup.Text>
+                        <i className="bi bi-search"></i>
+                      </InputGroup.Text>
+                      <Form.Control
+                        type="text"
+                        placeholder="Search by title or code..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        disabled={!selectedDept}
+                      />
+                      {searchTerm && (
+                        <Button
+                          variant="outline-secondary"
+                          onClick={() => setSearchTerm("")}
+                        >
+                          <i className="bi bi-x"></i>
+                        </Button>
+                      )}
+                    </InputGroup>
+                    <Form.Text className="text-muted">
+                      {!selectedDept
+                        ? "Select a department first to search courses"
+                        : "Enter course title or code to filter results"}
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
+
               {loading ? (
-                <Spinner animation="border" />
+                <div className="text-center py-4">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="mt-2">Loading courses...</p>
+                </div>
               ) : (
-                <Table striped bordered hover responsive>
-                  <thead>
-                    <tr>
-                      <th>Title</th>
-                      <th>Code</th>
-                      <th>Semester</th>
-                      <th>Level</th>
-                      <th>Unit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {courses.length > 0 ? (
-                      courses.map((course) => (
-                        <tr key={course._id}>
-                          <td>{course.title}</td>
-                          <td>{course.code}</td>
-                          <td>{course.semester}</td>
-                          <td>{course.level}</td>
-                          <td>{course.unit}</td>
-                        </tr>
-                      ))
-                    ) : (
+                <>
+                  {searchTerm && (
+                    <div className="mb-3">
+                      <Badge bg="info" className="p-2">
+                        {filteredCourses.length} course(s) found for "
+                        {searchTerm}"
+                      </Badge>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="ms-2"
+                        onClick={() => setSearchTerm("")}
+                      >
+                        Clear search
+                      </Button>
+                    </div>
+                  )}
+
+                  <Table striped bordered hover responsive>
+                    <thead>
                       <tr>
-                        <td colSpan="5" className="text-center">
-                          No courses found
-                        </td>
+                        <th>Title</th>
+                        <th>Code</th>
+                        <th>Semester</th>
+                        <th>Level</th>
+                        <th>Unit</th>
                       </tr>
-                    )}
-                  </tbody>
-                </Table>
+                    </thead>
+                    <tbody>
+                      {filteredCourses.length > 0 ? (
+                        filteredCourses.map((course) => (
+                          <tr key={course._id}>
+                            <td>{course.title}</td>
+                            <td>{course.code}</td>
+                            <td>{course.semester}</td>
+                            <td>{course.level}</td>
+                            <td>{course.unit}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" className="text-center py-4">
+                            <i className="bi bi-book display-4 text-muted d-block mb-2"></i>
+                            {selectedDept
+                              ? searchTerm
+                                ? `No courses found for "${searchTerm}"`
+                                : "No courses found for this department"
+                              : "Select a department to view courses"}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </>
               )}
             </Card.Body>
           </Card>

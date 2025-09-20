@@ -5,11 +5,16 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 const ApplyPage = () => {
   return (
-    <div className="container-lg py-3">
-      <h2 className="d-flex align-items-center gap-2 text-success">
-        {" "}
-        <FaBeer /> <span>Pinecrest </span>
-      </h2>
+    <div className="">
+      <nav className="navbar shadow bg-body-tertiary">
+        <div className="container">
+          <a className="navbar-brand" href="#">
+            <h2 className="d-flex align-items-center gap-2 text-success">
+              <FaBeer /> <span>Pinecrest College of Nursing and Midwifery</span>
+            </h2>
+          </a>
+        </div>
+      </nav>
       <Outlet />
     </div>
   );

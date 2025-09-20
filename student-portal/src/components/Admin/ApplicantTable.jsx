@@ -1,63 +1,52 @@
 import React from "react";
 
-const ApplicantTable = ({ applicants, onApprove, onReject }) => {
+function ApplicantTable({ applicants, onViewDetails }) {
   return (
-    <table className="table table-striped table-hover">
-      <thead className="table-dark">
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Course</th>
-          <th>Department</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {applicants.map((applicant) => (
-          <tr key={applicant._id}>
-            <td>{applicant.fullName}</td>
-            <td>{applicant.email}</td>
-            <td>{applicant.intendedCourse}</td>
-            <td>{applicant.department?.name}</td>
-            <td>
-              <span
-                className={`badge ${
-                  applicant.applicationStatus === "accepted"
-                    ? "bg-success"
-                    : applicant.applicationStatus === "pending"
-                    ? "bg-warning text-dark"
-                    : "bg-danger"
-                }`}
-              >
-                {applicant.applicationStatus}
-              </span>
-            </td>
-            <td>
-              {applicant.applicationStatus === "pending" ? (
-                <>
-                  <button
-                    className="btn btn-success btn-sm me-2"
-                    onClick={() => onApprove(applicant._id)}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => onReject(applicant._id)}
-                  >
-                    Reject
-                  </button>
-                </>
-              ) : (
-                <small>Reviewed</small>
-              )}
-            </td>
+    <div className="table-responsive">
+      <table className="table table-hover">
+        <thead className="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>View Details</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {applicants.map((a) => (
+            <tr key={a._id}>
+              <td>
+                {a.firstName} {a.lastName}
+              </td>
+              <td>{a.email}</td>
+              <td>
+                <span
+                  className={`badge ${
+                    a.applicationStatus === "accepted"
+                      ? "bg-success"
+                      : a.applicationStatus === "rejected"
+                      ? "bg-danger"
+                      : "bg-warning text-dark"
+                  }`}
+                >
+                  {a.applicationStatus}
+                </span>
+              </td>
+              <td>
+                <button
+                  className="btn btn-sm btn-success"
+                  onClick={() => onViewDetails(a)}
+                >
+                  <i className="bi bi-eye me-1"></i>
+                  View Details
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
-};
+}
 
 export default ApplicantTable;
