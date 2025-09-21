@@ -5,7 +5,8 @@ const Department = require("../models/Department");
 // ------------------- Submit Application -------------------
 const apply = async (req, res) => {
   try {
-    console.log("Received files:", req.files);
+    // Pretty log for uploaded files
+    console.log("Received files:", JSON.stringify(req.files, null, 2));
 
     const {
       firstName,
@@ -22,23 +23,27 @@ const apply = async (req, res) => {
       jambRegNumber,
       jambScore,
       oLevelExamNumber,
-      oLevelSubjects, // sent from frontend as JSON string
+      oLevelSubjects, // JSON string from frontend
     } = req.body;
 
-    // Extract Cloudinary file objects (multer-storage-cloudinary)
+    // Safely extract uploaded files from Cloudinary
     const passport = req.files?.passport?.[0] || null;
     const jamb = req.files?.jamb?.[0] || null;
     const oLevel = req.files?.olevel?.[0] || null;
 
-    // Parse O-Level subjects safely
+    // Parse O-Level subjects
     let parsedSubjects = [];
     if (oLevelSubjects) {
       try {
         parsedSubjects = JSON.parse(oLevelSubjects);
       } catch (err) {
-        console.error("Error parsing O-Level subjects:", err);
+        console.warn("Failed to parse O-Level subjects:", err.message);
       }
     }
+
+    // Prepare file data
+    const fileData = (file) =>
+      file ? { secure_url: file.path, public_id: file.filename } : null;
 
     // Create new applicant in MongoDB
     const newApplicant = await Applicant.create({
@@ -54,23 +59,17 @@ const apply = async (req, res) => {
       faculty,
       department,
 
-      passport: passport
-        ? { secure_url: passport.path, public_id: passport.filename }
-        : null,
+      passport: fileData(passport),
 
       jamb: {
         regNumber: jambRegNumber,
         score: jambScore,
-        resultFile: jamb
-          ? { secure_url: jamb.path, public_id: jamb.filename }
-          : null,
+        resultFile: fileData(jamb),
       },
 
       olevel: {
         examNumber: oLevelExamNumber,
-        resultFile: oLevel
-          ? { secure_url: oLevel.path, public_id: oLevel.filename }
-          : null,
+        resultFile: fileData(oLevel),
         subjects: parsedSubjects,
       },
     });
@@ -84,6 +83,7 @@ const apply = async (req, res) => {
     res.status(500).json({ message: "Application failed", error: err.message });
   }
 };
+
 
 // ------------------- Check status -------------------
 const checkStatus = async (req, res) => {
