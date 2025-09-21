@@ -188,8 +188,15 @@ const AdmissionForm = () => {
       alert("Application submitted successfully!");
       // Reset form or redirect if needed
     } catch (err) {
-      console.error("Error submitting application:", err);
-      alert("Failed to submit application. Please try again.");
+      console.error(
+        "Error submitting application:",
+        err.response?.data || err.message
+      );
+      alert(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to submit application."
+      );
       if (err.response?.status === 400) {
         // Handle specific backend validation errors
         if (err.response.data.errors) {

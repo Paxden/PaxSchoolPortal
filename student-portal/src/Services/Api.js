@@ -5,7 +5,7 @@ const isLocal = window.location.hostname === "localhost";
 
 const API = axios.create({
   baseURL: isLocal
-    ? "http://localhost:5000/"
+    ? "http://localhost:5000/api"
     : "https://paxschoolportal-backend.onrender.com/api",
 });
 
@@ -33,9 +33,7 @@ export const createDepartment = (facultyId, deptData) =>
 
 // Admissions
 export const applyAdmission = (formData) =>
-  API.post("/admissions/apply", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  API.post("/admissions/apply", formData);
 
 export const checkAdmissionStatus = (email) =>
   API.get(`/admissions/status/${email}`);
