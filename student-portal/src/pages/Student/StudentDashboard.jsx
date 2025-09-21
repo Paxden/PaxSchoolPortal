@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { getRegisteredCourses } from "../../Services/Api"; // ✅ use your API wrapper
 import Reading from "../Student/img/reading.png";
 
 const StudentDashboard = () => {
-  const student = JSON.parse(localStorage.getItem("studentInfo"));
+  const student = JSON.parse(sessionStorage.getItem("studentInfo"));
   const [registeredCourses, setRegisteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRegisteredCourses = async () => {
       try {
-        const { data } = await axios.get(
-          `http://localhost:5000/api/students/courses/${student._id}`
-        );
-        setRegisteredCourses(data || []);
+        if (student?._id) {
+          const { data } = await getRegisteredCourses(student._id);
+          setRegisteredCourses(data || []);
+        }
       } catch (err) {
         console.error("Error fetching courses", err);
       } finally {
@@ -21,9 +21,7 @@ const StudentDashboard = () => {
       }
     };
 
-    if (student?._id) {
-      fetchRegisteredCourses();
-    }
+    fetchRegisteredCourses();
   }, [student]);
 
   return (
@@ -37,7 +35,7 @@ const StudentDashboard = () => {
             <div className="card-body">
               <h5 className="card-title">Faculty</h5>
               <p className="card-text">
-                {student.department?.faculty?.name || "N/A"}
+                {student?.department?.faculty?.name || "N/A"}
               </p>
             </div>
           </div>
@@ -47,7 +45,7 @@ const StudentDashboard = () => {
           <div className="card text-bg-dark h-100 shadow rounded-3">
             <div className="card-body">
               <h5 className="card-title">Department</h5>
-              <p className="card-text">{student.department?.name || "N/A"}</p>
+              <p className="card-text">{student?.department?.name || "N/A"}</p>
             </div>
           </div>
         </div>

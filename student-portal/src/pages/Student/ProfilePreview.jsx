@@ -1,22 +1,20 @@
 import React from "react";
 
 function ProfilePreview() {
-  // Get student info from session storage
+  // ✅ Get student info from sessionStorage
   const studentInfo = sessionStorage.getItem("studentInfo");
   const student = studentInfo ? JSON.parse(studentInfo) : null;
 
-  // Determine profile image
+  // ✅ Determine profile image (handles string, object, or fallback)
   const profileImage = (() => {
     if (!student?.passport) return "https://avatar.iran.liara.run/public/boy"; // default avatar
 
-    // If passport is a string
     if (typeof student.passport === "string") {
       return student.passport.startsWith("http")
-        ? student.passport // full URL
-        : `http://localhost:5000/uploads/${student.passport}`; // legacy local upload
+        ? student.passport // already a URL
+        : `http://localhost:5000/uploads/${student.passport}`; // local upload
     }
 
-    // If passport is an object (Cloudinary)
     if (typeof student.passport === "object") {
       return (
         student.passport.secure_url ||
@@ -25,11 +23,10 @@ function ProfilePreview() {
       );
     }
 
-    // Fallback
-    return "https://avatar.iran.liara.run/public/boy";
+    return "https://avatar.iran.liara.run/public/boy"; // fallback
   })();
 
-  // Sample reminders
+  // Example reminders
   const reminders = [
     "Submit assignment by Friday",
     "Meet with study group at 3 PM",

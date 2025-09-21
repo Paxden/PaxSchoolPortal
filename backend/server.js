@@ -20,7 +20,12 @@ const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://pax-school-portal.vercel.app",
+    credentials: true, // Update with your frontend URL
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {

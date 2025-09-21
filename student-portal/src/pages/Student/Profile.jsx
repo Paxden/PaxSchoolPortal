@@ -2,33 +2,15 @@ import React from "react";
 import { Row, Col } from "react-bootstrap";
 
 const Profile = () => {
-  const studentInfo = localStorage.getItem("studentInfo");
+  // ✅ Get student info from sessionStorage instead of localStorage
+  const studentInfo = sessionStorage.getItem("studentInfo");
   const student = studentInfo ? JSON.parse(studentInfo) : null;
 
   if (!student) {
     return <div className="text-center py-5">Loading profile...</div>;
   }
 
-  // Determine profile image
-  const profileImage = (() => {
-    if (!student?.passport) return "https://avatar.iran.liara.run/public/boy"; // default avatar
-
-    if (typeof student.passport === "string") {
-      return student.passport.startsWith("http")
-        ? student.passport // full URL
-        : `http://localhost:5000/uploads/${student.passport}`; // legacy local upload
-    }
-
-    if (typeof student.passport === "object") {
-      return (
-        student.passport.secure_url ||
-        student.passport.url ||
-        "https://avatar.iran.liara.run/public/boy"
-      );
-    }
-
-    return "https://avatar.iran.liara.run/public/boy";
-  })();
+  console.log("Student passport:", student.passport);
 
   return (
     <div className="container w-100 py-5">
@@ -36,14 +18,18 @@ const Profile = () => {
         <h3 className="text-center fw-bold mb-4">🎓 Student Profile</h3>
 
         {/* Passport */}
-        <div className="text-center mb-4">
+        {student.passport && (
           <img
-            src={profileImage}
-            alt="Student Passport"
-            className="rounded-circle shadow"
-            style={{ width: "150px", height: "150px", objectFit: "cover" }}
+            src={
+              typeof student.passport === "string"
+                ? student.passport
+                : student.passport.secure_url || student.passport.url
+            }
+            alt="Passport"
+            className="rounded-circle shadow mx-auto mb-3"
+            style={{ width: "120px", height: "120px", objectFit: "cover" }}
           />
-        </div>
+        )}
 
         <Row className="gy-4">
           <Col md={6}>
@@ -91,7 +77,9 @@ const Profile = () => {
             <Col md={6}>
               <div className="bg-white rounded-3 shadow-sm p-3">
                 <strong>Date of Birth:</strong>
-                <p className="mb-0">{student.dob}</p>
+                <p className="mb-0">
+                  {new Date(student.dob).toLocaleDateString()}
+                </p>
               </div>
             </Col>
           )}

@@ -84,7 +84,6 @@ const apply = async (req, res) => {
   }
 };
 
-
 // ------------------- Check status -------------------
 const checkStatus = async (req, res) => {
   try {
@@ -210,7 +209,11 @@ const getApplicants = async (req, res) => {
 
 // ------------------- Get Students -------------------
 const getStudents = async (req, res) => {
-  const students = await Student.find().populate("department", "name");
+  const students = await Student.find()
+    .populate("faculty", "name") // only bring faculty name
+    .populate("department", "name"); // only bring department name
+
+
   res.json(students);
 };
 
