@@ -1,31 +1,17 @@
 const multer = require("multer");
-const path = require("path");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinary");
 
-// Storage config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // make sure "uploads" folder exists
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
+// Configure storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "school_uploads", // All files go here in Cloudinary
+    format: async (req, file) => "png", // optional, can keep original format
+    public_id: (req, file) => `${Date.now()}-${file.originalname}`,
   },
 });
 
-// File filter (accept only images & pdf)
-const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|pdf/;
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (allowed.test(ext)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Invalid file type. Only jpg, png, pdf allowed!"), false);
-  }
-};
-
-const upload = multer({ storage, fileFilter });
-
+// Multer middleware
+const upload = multer({ storage });
 module.exports = upload;

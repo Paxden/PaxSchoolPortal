@@ -53,8 +53,6 @@ function Applicants() {
   );
 
   // Build full file path from backend
-  const fileUrl = (filename) =>
-    filename ? `http://localhost:5000/uploads/${filename}` : null;
 
   return (
     <div className="container mt-5">
@@ -109,7 +107,12 @@ function Applicants() {
                 <div className="text-center mb-4">
                   {selectedApplicant.passport && (
                     <img
-                      src={fileUrl(selectedApplicant.passport)}
+                      src={
+                        typeof selectedApplicant.passport === "string"
+                          ? selectedApplicant.passport
+                          : selectedApplicant.passport.secure_url ||
+                            selectedApplicant.passport.url
+                      }
                       alt="Passport"
                       className="rounded-circle shadow"
                       style={{
@@ -143,7 +146,13 @@ function Applicants() {
                     </p>
                     {selectedApplicant.olevel.resultFile && (
                       <a
-                        href={fileUrl(selectedApplicant.olevel.resultFile)}
+                        href={
+                          typeof selectedApplicant.olevel.resultFile ===
+                          "string"
+                            ? selectedApplicant.olevel.resultFile
+                            : selectedApplicant.olevel.resultFile.secure_url ||
+                              selectedApplicant.olevel.resultFile.url
+                        }
                         target="_blank"
                         rel="noreferrer"
                         className="btn btn-sm btn-outline-success mb-2"
@@ -184,7 +193,12 @@ function Applicants() {
                     </p>
                     {selectedApplicant.jamb.resultFile && (
                       <a
-                        href={fileUrl(selectedApplicant.jamb.resultFile)}
+                        href={
+                          typeof selectedApplicant.jamb.resultFile === "string"
+                            ? selectedApplicant.jamb.resultFile
+                            : selectedApplicant.jamb.resultFile.secure_url ||
+                              selectedApplicant.jamb.resultFile.url
+                        }
                         target="_blank"
                         rel="noreferrer"
                         className="btn btn-sm btn-outline-success"

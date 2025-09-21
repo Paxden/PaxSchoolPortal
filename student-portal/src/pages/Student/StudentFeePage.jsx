@@ -1,125 +1,125 @@
-import React, { useEffect, useState } from "react";
-import { getFees, payFee, getStudentPayments } from "../../Services/Api";
-import "bootstrap/dist/css/bootstrap.min.css";
+import React, { useState, useEffect } from "react";
+import { payFee, getStudentPayments, getFees } from "../../Services/Api";
+import { toast } from "react-toastify";
 
 const StudentFeePage = () => {
-  const student = JSON.parse(localStorage.getItem("studentInfo"));
-  const studentId = student?._id;
-
+  const [activeTab, setActiveTab] = useState("pay");
   const [fees, setFees] = useState([]);
-  const [payments, setPayments] = useState([]);
   const [selectedFee, setSelectedFee] = useState("");
   const [receipt, setReceipt] = useState(null);
-  const [receiptPreview, setReceiptPreview] = useState(null);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [activeTab, setActiveTab] = useState("payment");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [student, setStudent] = useState(null);
 
-  // Load fees
   useEffect(() => {
-    const fetchFees = async () => {
+    // Get student info from session storage
+    const studentInfo = sessionStorage.getItem("studentInfo");
+    if (studentInfo) {
       try {
-        const res = await getFees();
-        setFees(res.data);
-      } catch (err) {
-        console.error(err);
-        setMessage("❌ Failed to load fees. Please try again later.");
+        const studentData = JSON.parse(studentInfo);
+        setStudent(studentData);
+        fetchFees();
+        fetchPayments(studentData._id);
+      } catch (error) {
+        console.error("Error parsing student info:", error);
+        toast.error("Failed to load student information");
       }
-    };
-    fetchFees();
+    } else {
+      toast.error("Student information not found. Please log in again.");
+    }
   }, []);
 
-  // Load student payment history
-  useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        const res = await getStudentPayments(studentId);
-        setPayments(res.data);
-      } catch (err) {
-        console.error(err);
-        setMessage("❌ Failed to load payment history.");
-      }
-    };
-    if (studentId) fetchPayments();
-  }, [studentId]);
-
-  // Handle receipt preview
-  const handleReceiptChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setReceipt(file);
-
-      // Create preview for images
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setReceiptPreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setReceiptPreview(null);
-      }
+  const fetchFees = async () => {
+    try {
+      const response = await getFees();
+      setFees(response.data);
+    } catch {
+      toast.error("Failed to fetch fees");
     }
   };
 
-  // Handle payment
-  const handlePay = async (e) => {
+  const fetchPayments = async (studentId) => {
+    try {
+      const response = await getStudentPayments(studentId);
+      setPayments(response.data);
+    // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      toast.error("Failed to fetch payment history");
+    }
+  };
+
+  const handleFeeSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedFee || !receipt) {
-      setMessage("Please select a fee and upload a receipt.");
+
+    if (!student || !student._id) {
+      toast.error("Student information not available");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("feeId", selectedFee);
-    formData.append("receipt", receipt);
+    if (!selectedFee || !receipt) {
+      toast.error("Please select a fee and upload a receipt");
+      return;
+    }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      setMessage("");
+      const formData = new FormData();
+      formData.append("feeId", selectedFee);
+      formData.append("receipt", receipt);
 
-      await payFee(studentId, formData);
-
-      setMessage("✅ Payment submitted successfully. Awaiting verification.");
-      setReceipt(null);
-      setReceiptPreview(null);
+      await payFee(student._id, formData);
+      toast.success(
+        "Payment submitted successfully! Waiting for verification."
+      );
       setSelectedFee("");
-
-      // refresh history
-      const res = await getStudentPayments(studentId);
-      setPayments(res.data);
-
-      // Switch to history tab
-      setActiveTab("history");
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Error submitting payment. Please try again.");
+      setReceipt(null);
+      fetchPayments(student._id); // Refresh payment history
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error(error.response?.data?.message || "Failed to submit payment");
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter payments by status
-  const filteredPayments = payments.filter((payment) => {
-    if (filterStatus === "all") return true;
-    return payment.status === filterStatus;
-  });
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+    }).format(amount);
+  };
+
+  if (!student) {
+    return (
+      <div className="container mt-4">
+        <h2>Fee Management</h2>
+        <p>Loading student information...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Tuition Management </h2>
-      </div>
+      <h2 className="mb-2">
+        Fee Management - {student.firstName} {student.lastName}
+      </h2>
+      <p className="text-muted mb-4">Student ID: {student.studentId}</p>
 
-      {/* Navigation Tabs */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === "payment" ? "active" : ""}`}
-            onClick={() => setActiveTab("payment")}
+            className={`nav-link ${activeTab === "pay" ? "active" : ""}`}
+            onClick={() => setActiveTab("pay")}
           >
-            Make Payment
+            Pay Fee
           </button>
         </li>
         <li className="nav-item">
@@ -132,191 +132,126 @@ const StudentFeePage = () => {
         </li>
       </ul>
 
-      {/* Payment Form Tab */}
-      {activeTab === "payment" && (
-        <div className="card">
-          <div className="card-body">
-            <h4 className="card-title mb-4">Submit Fee Payment</h4>
-
-            <form onSubmit={handlePay}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Select Fee</label>
-                  <select
-                    className="form-select"
-                    value={selectedFee}
-                    onChange={(e) => setSelectedFee(e.target.value)}
-                    required
-                  >
-                    <option value="">-- Choose Fee --</option>
-                    {fees.map((fee) => (
-                      <option key={fee._id} value={fee._id}>
-                        {fee.title} - {fee.session} {fee.semester} (₦
-                        {fee.amount.toLocaleString()})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Upload Receipt (Image or PDF)
-                  </label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    accept="image/*,application/pdf"
-                    onChange={handleReceiptChange}
-                    required
-                  />
-                  <div className="form-text">
-                    Upload a clear image or PDF of your payment receipt
-                  </div>
-                </div>
-              </div>
-
-              {receiptPreview && (
-                <div className="mb-3">
-                  <label className="form-label">Receipt Preview</label>
-                  <div>
-                    <img
-                      src={receiptPreview}
-                      alt="Receipt preview"
-                      className="img-thumbnail"
-                      style={{ maxHeight: "200px" }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <button
-                className="btn btn-success"
-                type="submit"
-                disabled={loading}
+      {activeTab === "pay" && (
+        <div className="pay-fee-section">
+          <h3 className="mb-4">Pay New Fee</h3>
+          <form onSubmit={handleFeeSubmit}>
+            <div className="mb-3">
+              <label htmlFor="feeSelect" className="form-label">
+                Select Fee:
+              </label>
+              <select
+                id="feeSelect"
+                className="form-select"
+                value={selectedFee}
+                onChange={(e) => setSelectedFee(e.target.value)}
+                required
               >
-                {loading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Payment"
-                )}
-              </button>
-            </form>
+                <option value="">-- Select Fee --</option>
+                {fees.map((fee) => (
+                  <option key={fee._id} value={fee._id}>
+                    {fee.title} - {fee.session} {fee.semester} (
+                    {formatCurrency(fee.amount)})
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {message && (
-              <div
-                className={`alert ${
-                  message.includes("✅") ? "alert-success" : "alert-danger"
-                } mt-3`}
-              >
-                {message}
-              </div>
-            )}
+            <div className="mb-4">
+              <label htmlFor="receiptUpload" className="form-label">
+                Upload Payment Receipt:
+              </label>
+              <input
+                type="file"
+                id="receiptUpload"
+                className="form-control"
+                accept="image/*,.pdf"
+                onChange={(e) => setReceipt(e.target.files[0])}
+                required
+              />
+              {receipt && <p className="text-success mt-2">{receipt.name}</p>}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+            >
+              {loading ? "Processing..." : "Submit Payment"}
+            </button>
+          </form>
+
+          <div className="mt-5 p-3 bg-light rounded">
+            <h4>Payment Instructions:</h4>
+            <ol className="mt-3">
+              <li>Select the fee you want to pay</li>
+              <li>Make payment through your bank or online platform</li>
+              <li>Upload a clear image or PDF of your payment receipt</li>
+              <li>Submit for verification by the admin</li>
+              <li>Check back later to see if your payment has been verified</li>
+            </ol>
           </div>
         </div>
       )}
 
-      {/* Payment History Tab */}
       {activeTab === "history" && (
-        <div>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h4>Payment History</h4>
+        <div className="payment-history-section">
+          <h3 className="mb-4">Payment History</h3>
 
-            <div className="d-flex gap-2 align-items-center">
-              <span>Filter by:</span>
-              <select
-                className="form-select form-select-sm"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                style={{ width: "auto" }}
-              >
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="verified">Verified</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-          </div>
-
-          {filteredPayments.length > 0 ? (
+          {payments.length === 0 ? (
+            <p className="text-muted">No payment history found.</p>
+          ) : (
             <div className="table-responsive">
-              <table className="table table-striped table-hover">
-                <thead className="table-dark">
+              <table className="table table-striped">
+                <thead>
                   <tr>
                     <th>Fee</th>
-                    <th>Semester</th>
-                    <th>Session</th>
                     <th>Amount</th>
-                    <th>Date</th>
+                    <th>Date Paid</th>
                     <th>Status</th>
                     <th>Receipt</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPayments.map((pay) => (
-                    <tr key={pay._id}>
-                      <td>{pay.fee?.title}</td>
-                      <td>{pay.fee?.semester}</td>
-                      <td>{pay.fee?.session}</td>
-                      <td>₦{(pay.fee?.amount || 0).toLocaleString()}</td>
-                      <td>{new Date(pay.createdAt).toLocaleDateString()}</td>
+                  {payments.map((payment) => (
+                    <tr key={payment._id}>
                       <td>
-                        {pay.status === "pending" && (
-                          <span className="badge bg-warning text-dark">
-                            Pending
-                          </span>
-                        )}
-                        {pay.status === "verified" && (
-                          <span className="badge bg-success">Verified</span>
-                        )}
-                        {pay.status === "rejected" && (
-                          <span className="badge bg-danger">Rejected</span>
-                        )}
+                        <strong>{payment.fee?.title}</strong>
+                        <div className="text-muted small">
+                          {payment.fee?.session} - {payment.fee?.semester}
+                        </div>
+                      </td>
+                      <td>{formatCurrency(payment.amount)}</td>
+                      <td>{formatDate(payment.paidAt || payment.createdAt)}</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            payment.status === "pending"
+                              ? "bg-warning text-dark"
+                              : payment.status === "verified"
+                              ? "bg-success"
+                              : "bg-danger"
+                          }`}
+                        >
+                          {payment.status}
+                        </span>
                       </td>
                       <td>
-                        {pay.receipt ? (
+                        {payment.receipt && (
                           <a
-                            href={`/uploads/${pay.receipt}`}
+                            href={payment.receipt}
                             target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-sm btn-outline-success"
+                            rel="noopener noreferrer"
+                            className="btn btn-sm btn-outline-primary"
                           >
-                            View
+                            View Receipt
                           </a>
-                        ) : (
-                          "No receipt"
                         )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <div className="text-center py-5">
-              <div className="text-muted mb-3">
-                <i className="bi bi-receipt" style={{ fontSize: "3rem" }}></i>
-              </div>
-              <h5>No payment history found</h5>
-              <p className="text-muted">
-                {filterStatus !== "all"
-                  ? `No payments with status '${filterStatus}'`
-                  : "You haven't made any payments yet."}
-              </p>
-              {filterStatus !== "all" && (
-                <button
-                  className="btn btn-outline-success"
-                  onClick={() => setFilterStatus("all")}
-                >
-                  View All Payments
-                </button>
-              )}
             </div>
           )}
         </div>

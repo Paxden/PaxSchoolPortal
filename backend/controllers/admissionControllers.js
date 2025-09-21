@@ -2,9 +2,11 @@ const Applicant = require("../models/Applicants");
 const Student = require("../models/Students");
 const Department = require("../models/Department");
 
-// Submit application
+// ------------------- Submit Application -------------------
 const apply = async (req, res) => {
   try {
+    console.log("Received files:", req.files);
+
     const {
       firstName,
       lastName,
@@ -20,32 +22,26 @@ const apply = async (req, res) => {
       jambRegNumber,
       jambScore,
       oLevelExamNumber,
+      oLevelSubjects, // sent from frontend as JSON string
     } = req.body;
 
-    // Parse subjects (string → array of objects)
-    let oLevelSubjects = [];
-    if (req.body.oLevelSubjects) {
+    // Extract Cloudinary file objects (multer-storage-cloudinary)
+    const passport = req.files?.passport?.[0] || null;
+    const jamb = req.files?.jamb?.[0] || null;
+    const oLevel = req.files?.olevel?.[0] || null;
+
+    // Parse O-Level subjects safely
+    let parsedSubjects = [];
+    if (oLevelSubjects) {
       try {
-        oLevelSubjects = JSON.parse(req.body.oLevelSubjects);
+        parsedSubjects = JSON.parse(oLevelSubjects);
       } catch (err) {
-        return res
-          .status(400)
-          .json({ error: "Invalid O'Level subjects format" });
+        console.error("Error parsing O-Level subjects:", err);
       }
     }
 
-    // Handle files
-    const passport = req.files?.passport
-      ? req.files.passport[0].filename
-      : null;
-    const jambResultFile = req.files?.jambResult
-      ? req.files.jambResult[0].filename
-      : null;
-    const oLevelResultFile = req.files?.oLevelResult
-      ? req.files.oLevelResult[0].filename
-      : null;
-
-    const applicant = new Applicant({
+    // Create new applicant in MongoDB
+    const newApplicant = await Applicant.create({
       firstName,
       lastName,
       otherName,
@@ -54,36 +50,42 @@ const apply = async (req, res) => {
       gender,
       dateOfBirth: dob,
       address,
-      passport,
       intendedCourse,
       faculty,
       department,
+
+      passport: passport
+        ? { secure_url: passport.path, public_id: passport.filename }
+        : null,
+
       jamb: {
         regNumber: jambRegNumber,
         score: jambScore,
-        resultFile: jambResultFile,
+        resultFile: jamb
+          ? { secure_url: jamb.path, public_id: jamb.filename }
+          : null,
       },
+
       olevel: {
         examNumber: oLevelExamNumber,
-        subjects: oLevelSubjects, // ✅ array saved here
-        resultFile: oLevelResultFile,
+        resultFile: oLevel
+          ? { secure_url: oLevel.path, public_id: oLevel.filename }
+          : null,
+        subjects: parsedSubjects,
       },
     });
 
-    await applicant.save();
-    res.status(201).json(applicant);
+    res.status(201).json({
+      message: "Application submitted successfully",
+      applicant: newApplicant,
+    });
   } catch (err) {
-    if (err.code === 11000) {
-      return res
-        .status(400)
-        .json({ error: "Email already exists. Use another email." });
-    }
-    console.error("Application submission error:", err);
-    res.status(400).json({ error: err.message });
+    console.error("Application Error:", err);
+    res.status(500).json({ message: "Application failed", error: err.message });
   }
 };
 
-// Check status
+// ------------------- Check status -------------------
 const checkStatus = async (req, res) => {
   try {
     const { email } = req.params;
@@ -99,7 +101,7 @@ const checkStatus = async (req, res) => {
   }
 };
 
-// Approve application
+// ------------------- Approve Application -------------------
 const approveApplication = async (req, res) => {
   try {
     const { id } = req.params;
@@ -107,15 +109,18 @@ const approveApplication = async (req, res) => {
     if (!applicant)
       return res.status(404).json({ message: "Applicant not found" });
 
+    // Update applicant status
     applicant.applicationStatus = "accepted";
     applicant.reviewedAt = new Date();
     applicant.reviewedBy = req.user?.id || null;
     await applicant.save();
 
+    // Generate Student ID
     const studentId = `STU/${new Date().getFullYear()}/${Math.floor(
       1000 + Math.random() * 9000
     )}`;
 
+    // Create student record using applicant data
     const newStudent = new Student({
       firstName: applicant.firstName,
       lastName: applicant.lastName,
@@ -125,12 +130,45 @@ const approveApplication = async (req, res) => {
       gender: applicant.gender,
       dob: applicant.dateOfBirth,
       address: applicant.address,
-      passport: applicant.passport,
+
+      // Cloudinary passport
+      passport: applicant.passport
+        ? {
+            secure_url: applicant.passport.secure_url,
+            public_id: applicant.passport.public_id,
+          }
+        : null,
+
       studentId,
       faculty: applicant.faculty,
       department: applicant.department,
-      jamb: applicant.jamb,
-      olevel: applicant.olevel,
+
+      jamb: applicant.jamb
+        ? {
+            regNumber: applicant.jamb.regNumber,
+            score: applicant.jamb.score,
+            resultFile: applicant.jamb.resultFile
+              ? {
+                  secure_url: applicant.jamb.resultFile.secure_url,
+                  public_id: applicant.jamb.resultFile.public_id,
+                }
+              : null,
+          }
+        : null,
+
+      olevel: applicant.olevel
+        ? {
+            examNumber: applicant.olevel.examNumber,
+            subjects: applicant.olevel.subjects,
+            resultFile: applicant.olevel.resultFile
+              ? {
+                  secure_url: applicant.olevel.resultFile.secure_url,
+                  public_id: applicant.olevel.resultFile.public_id,
+                }
+              : null,
+          }
+        : null,
+
       enrolledAt: new Date(),
       status: "active",
     });
@@ -142,12 +180,12 @@ const approveApplication = async (req, res) => {
       student: newStudent,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Approve Application Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// Reject application
+// ------------------- Reject Application -------------------
 const rejectApplication = async (req, res) => {
   try {
     const { id } = req.params;
@@ -165,35 +203,31 @@ const rejectApplication = async (req, res) => {
   }
 };
 
-// Get all applicants
 const getApplicants = async (req, res) => {
   const applicants = await Applicant.find().populate("department", "name");
   res.json(applicants);
 };
 
+// ------------------- Get Students -------------------
 const getStudents = async (req, res) => {
   const students = await Student.find().populate("department", "name");
   res.json(students);
 };
 
-// Approve fees payment
- const approveFee = async (req, res) => {
+const approveFee = async (req, res) => {
   try {
     const { studentId, feeId } = req.params;
 
-    // Find student
     const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // Find the specific fee
     const fee = student.fees.id(feeId);
     if (!fee) {
       return res.status(404).json({ message: "Fee record not found" });
     }
 
-    // Update fee status
     fee.status = "Approved";
     fee.approvedAt = new Date();
 
@@ -204,7 +238,9 @@ const getStudents = async (req, res) => {
       fees: student.fees,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error approving fee", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error approving fee", error: error.message });
   }
 };
 

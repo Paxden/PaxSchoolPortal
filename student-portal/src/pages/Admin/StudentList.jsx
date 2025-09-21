@@ -71,10 +71,6 @@ const StudentList = () => {
     setSelectedStudent(null);
   };
 
-  // Build full file path from backend
-  const fileUrl = (filename) =>
-    filename ? `http://localhost:5000/uploads/${filename}` : null;
-
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -223,6 +219,7 @@ const StudentList = () => {
       )}
 
       {/* Student Details Modal */}
+      {/* Student Details Modal */}
       <Modal show={showModal} onHide={handleCloseModal} size="lg" centered>
         <div className="modal-content border-0 rounded-4 shadow-lg">
           <Modal.Header closeButton className="bg-light border-0">
@@ -238,7 +235,12 @@ const StudentList = () => {
                 <div className="text-center mb-4">
                   {selectedStudent.passport && (
                     <img
-                      src={fileUrl(selectedStudent.passport)}
+                      src={
+                        typeof selectedStudent.passport === "string"
+                          ? selectedStudent.passport
+                          : selectedStudent.passport.secure_url ||
+                            selectedStudent.passport.url
+                      }
                       alt="Passport"
                       className="rounded-circle shadow"
                       style={{
@@ -352,7 +354,12 @@ const StudentList = () => {
 
                     {selectedStudent.olevel.resultFile && (
                       <a
-                        href={fileUrl(selectedStudent.olevel.resultFile)}
+                        href={
+                          typeof selectedStudent.olevel.resultFile === "string"
+                            ? selectedStudent.olevel.resultFile
+                            : selectedStudent.olevel.resultFile.secure_url ||
+                              selectedStudent.olevel.resultFile.url
+                        }
                         target="_blank"
                         rel="noreferrer"
                         className="btn btn-sm btn-outline-success mt-2"
@@ -386,9 +393,15 @@ const StudentList = () => {
                         </p>
                       </Col>
                     </Row>
+
                     {selectedStudent.jamb.resultFile && (
                       <a
-                        href={fileUrl(selectedStudent.jamb.resultFile)}
+                        href={
+                          typeof selectedStudent.jamb.resultFile === "string"
+                            ? selectedStudent.jamb.resultFile
+                            : selectedStudent.jamb.resultFile.secure_url ||
+                              selectedStudent.jamb.resultFile.url
+                        }
                         target="_blank"
                         rel="noreferrer"
                         className="btn btn-sm btn-outline-success"

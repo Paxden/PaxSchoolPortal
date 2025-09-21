@@ -68,7 +68,9 @@ export const getAllPayments = () => API.get("/fees/payments"); // NEW: fetch all
 // =====================
 export const payFee = (studentId, formData) =>
   API.post(`/fees/${studentId}/pay`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
   });
 
 export const getStudentPayments = (studentId) =>

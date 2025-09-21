@@ -21,12 +21,17 @@ const AdminNavbar = () => {
       <div className="collapse navbar-collapse">
         <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
           <li className="nav-item">
+            <Link className="nav-link" to="/admin/">
+              Overview
+            </Link>
+          </li>
+          <li className="nav-item">
             <Link className="nav-link" to="/admin/faculty">
               Faculty
             </Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link" to="/admin/">
+            <Link className="nav-link" to="/admin/applicants">
               Applicants
             </Link>
           </li>

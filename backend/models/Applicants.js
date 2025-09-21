@@ -13,7 +13,10 @@ const applicantSchema = new Schema(
     dateOfBirth: { type: Date },
     address: { type: String },
 
-    passport: { type: String }, // file path or URL
+    passport: {
+      secure_url: { type: String, required: true },
+      public_id: { type: String, required: true },
+    },
 
     intendedCourse: { type: String, required: true },
     faculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" },
@@ -26,7 +29,10 @@ const applicantSchema = new Schema(
     jamb: {
       regNumber: { type: String },
       score: { type: Number },
-      resultFile: { type: String }, // upload path
+      resultFile: {
+        secure_url: { type: String },
+        public_id: { type: String },
+      },
     },
 
     olevel: {
@@ -37,7 +43,10 @@ const applicantSchema = new Schema(
           grade: { type: String },
         },
       ],
-      resultFile: { type: String }, // upload path
+      resultFile: {
+        secure_url: { type: String },
+        public_id: { type: String },
+      },
     },
 
     applicationStatus: {
@@ -46,11 +55,9 @@ const applicantSchema = new Schema(
       default: "pending",
     },
     reviewedAt: { type: Date },
-    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" }, // reviewer (Admin/Staff)
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Applicant", applicantSchema);

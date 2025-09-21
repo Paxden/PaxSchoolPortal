@@ -4,6 +4,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 // cloudflared tunnel Set-Alias cloudflared "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 // cloudflared tunnel --url http://localhost:5173
+// Cloudname: dj3la93pq
+// Api key: 411464191644249
+// Api secret: gzo7z5HzC1hbVV0OI-cn0QFtVH4
 
 // Components
 import ProtectRoute from "./Utils/ProtectRoute";
@@ -17,6 +20,7 @@ import AdminLogin from "./components/Admin/AdminLogin";
 import StudentList from "./pages/Admin/StudentList";
 import AdminFeePage from "./pages/Admin/AdminFeePage";
 import FacultyDepartment from "./pages/Admin/FacultyDepartment";
+import AdminOvervew from "./pages/Admin/AdminOverview";
 // Students
 import StudentLogin from "./pages/Student/StudentLogin";
 import StudentDashboard from "./pages/Student/StudentDashboard";
@@ -55,6 +59,14 @@ function App() {
         >
           <Route
             index
+            element={
+              <ProtectRoute>
+                <AdminOvervew />
+              </ProtectRoute>
+            }
+          />
+          <Route
+            path="applicants"
             element={
               <ProtectRoute>
                 <Applicants />

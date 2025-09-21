@@ -20,15 +20,15 @@ const AdmissionForm = () => {
     email: "",
     phone: "",
     gender: "",
-    dateOfBirth: "",
+    dob: "",
     address: "",
     passport: null,
     jambRegNumber: "",
     jambScore: "",
-    jambResult: null,
+    jamb: null,
     oLevelExamNumber: "",
     oLevelSubjects: [{ subject: "", grade: "" }], // ✅ array of objects
-    oLevelResult: null,
+    olevel: null,
     faculty: "",
     department: "",
   });
@@ -121,8 +121,7 @@ const AdmissionForm = () => {
         newErrors.email = "Email is invalid";
       if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
       if (!formData.gender) newErrors.gender = "Gender is required";
-      if (!formData.dateOfBirth)
-        newErrors.dateOfBirth = "Date of birth is required";
+      if (!formData.dob) newErrors.dob = "Date of birth is required";
     } else if (step === 2) {
       if (!formData.jambRegNumber.trim())
         newErrors.jambRegNumber = "JAMB exam number is required";
@@ -190,7 +189,7 @@ const AdmissionForm = () => {
       // Reset form or redirect if needed
     } catch (err) {
       console.error("Error submitting application:", err);
-
+      alert("Failed to submit application. Please try again.");
       if (err.response?.status === 400) {
         // Handle specific backend validation errors
         if (err.response.data.errors) {
@@ -382,18 +381,14 @@ const AdmissionForm = () => {
                 </label>
                 <input
                   type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
+                  name="dob"
+                  value={formData.dob}
                   onChange={handleChange}
-                  className={`form-control ${
-                    errors.dateOfBirth ? "is-invalid" : ""
-                  }`}
+                  className={`form-control ${errors.dob ? "is-invalid" : ""}`}
                   required
                 />
-                {errors.dateOfBirth && (
-                  <div className="invalid-feedback d-block">
-                    {errors.dateOfBirth}
-                  </div>
+                {errors.dob && (
+                  <div className="invalid-feedback d-block">{errors.dob}</div>
                 )}
               </div>
 
@@ -475,7 +470,7 @@ const AdmissionForm = () => {
                 <label className="form-label">JAMB Result File</label>
                 <input
                   type="file"
-                  name="jambResult" // Changed to match backend
+                  name="jamb" // Changed to match backend
                   onChange={handleFileChange}
                   className="form-control"
                   accept=".pdf,.jpg,.png"
@@ -572,7 +567,7 @@ const AdmissionForm = () => {
                 <label className="form-label">O-Level Result File</label>
                 <input
                   type="file"
-                  name="oLevelResult" // Changed to match backend
+                  name="olevel" // Changed to match backend
                   onChange={handleFileChange}
                   className="form-control"
                   accept=".pdf,.jpg,.png"

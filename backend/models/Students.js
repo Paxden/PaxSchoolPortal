@@ -8,17 +8,23 @@ const oLevelSchema = new mongoose.Schema({
       grade: { type: String, required: true },
     },
   ],
-  resultFile: { type: String, required: true }, // file path or URL
+  resultFile: {
+    secure_url: { type: String, required: true }, // Cloudinary URL
+    public_id: { type: String, required: true }, // Cloudinary public ID
+  },
 });
 
 const jambSchema = new mongoose.Schema({
   regNumber: { type: String, required: true },
   score: { type: Number, required: true },
-  resultFile: { type: String, require: true }, // file path or URL
+  resultFile: {
+    secure_url: { type: String, required: true },
+    public_id: { type: String, required: true },
+  },
 });
 
 const studentSchema = new mongoose.Schema({
-  // Step 1 - Personal Details
+  // Personal
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   otherName: { type: String },
@@ -27,25 +33,20 @@ const studentSchema = new mongoose.Schema({
   gender: { type: String, enum: ["male", "female", "other"] },
   dob: { type: Date },
   address: { type: String },
-  passport: { type: String, required: true }, // file path or URL
-
-  intendedCourse: { type: String }, // plain string field
-
-  // Step 2 - Academic Details
-  faculty: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Faculty",
+  passport: {
+    secure_url: { type: String, required: true },
+    public_id: { type: String, required: true },
   },
-  department: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Department",
-  },
+
+  intendedCourse: { type: String },
+
+  faculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" },
+  department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
 
   jamb: jambSchema,
   olevel: oLevelSchema,
 
-  // System fields
-  studentId: { type: String, unique: true }, // e.g. STU/2025/1234
+  studentId: { type: String, unique: true },
   enrolledAt: { type: Date, default: Date.now },
   status: {
     type: String,

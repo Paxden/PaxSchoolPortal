@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
-
+const fileRoutes = require("./routes/fileRoutes");
 
 // Modules
 const facultyRoutes = require("./routes/facultyRoutes");
@@ -11,7 +11,6 @@ const admissionRoutes = require("./routes/admissionRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const courseRoutes = require("./routes/courseRoute");
 const feeRoutes = require("./routes/feeRoutes");
-
 
 // Express App
 const app = express();
@@ -40,7 +39,8 @@ app.use("/api/students", studentRoutes);
 app.use("/api/courses", courseRoutes);
 // Fee Routes
 app.use("/api/fees", feeRoutes);
-
+// File Routes
+app.use("/api/files", fileRoutes);
 
 console.log("Connecting to db ...");
 

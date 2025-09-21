@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema({
   student: {
@@ -6,8 +6,14 @@ const paymentSchema = new mongoose.Schema({
     ref: "Student",
     required: true,
   },
-  fee: { type: mongoose.Schema.Types.ObjectId, ref: "Fee", required: true },
-  receipt: { type: String }, // filename from multer
+  fee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Fee",
+    required: true,
+  },
+  receipt: {
+    type: String, // Cloudinary secure_url
+  },
   status: {
     type: String,
     enum: ["pending", "verified", "rejected"],
@@ -16,4 +22,4 @@ const paymentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model("Payment", paymentSchema);
+module.exports = mongoose.model("Payment", paymentSchema);

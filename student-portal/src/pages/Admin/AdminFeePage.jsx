@@ -331,7 +331,7 @@ const AdminFeePage = () => {
                   <tr>
                     <th>Student ID</th>
                     <th>Name</th>
-                    <th>Faculty</th>
+
                     <th>Department</th>
                     <th>Fee</th>
                     <th>Amount</th>
@@ -350,7 +350,7 @@ const AdminFeePage = () => {
                       <td>
                         {pay.student?.firstName} {pay.student?.lastName}
                       </td>
-                      <td>{pay.student?.faculty?.name || "N/A"}</td>
+
                       <td>{pay.student?.department?.name || "N/A"}</td>
                       <td>{pay.fee?.title || "N/A"}</td>
                       <td>₦{(pay.fee?.amount || 0).toLocaleString()}</td>

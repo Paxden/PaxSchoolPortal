@@ -1,15 +1,35 @@
 import React from "react";
 
 function ProfilePreview() {
+  // Get student info from session storage
   const studentInfo = sessionStorage.getItem("studentInfo");
   const student = studentInfo ? JSON.parse(studentInfo) : null;
 
-  // fallback avatar if no passport is uploaded
-  const profileImage = student?.passport
-    ? `http://localhost:5000/uploads/${student.passport}`
-    : "https://avatar.iran.liara.run/public/boy";
+  // Determine profile image
+  const profileImage = (() => {
+    if (!student?.passport) return "https://avatar.iran.liara.run/public/boy"; // default avatar
 
-  // Sample random reminders
+    // If passport is a string
+    if (typeof student.passport === "string") {
+      return student.passport.startsWith("http")
+        ? student.passport // full URL
+        : `http://localhost:5000/uploads/${student.passport}`; // legacy local upload
+    }
+
+    // If passport is an object (Cloudinary)
+    if (typeof student.passport === "object") {
+      return (
+        student.passport.secure_url ||
+        student.passport.url ||
+        "https://avatar.iran.liara.run/public/boy"
+      );
+    }
+
+    // Fallback
+    return "https://avatar.iran.liara.run/public/boy";
+  })();
+
+  // Sample reminders
   const reminders = [
     "Submit assignment by Friday",
     "Meet with study group at 3 PM",
@@ -20,7 +40,7 @@ function ProfilePreview() {
 
   if (!student) {
     return (
-      <div className="bg-light p-4 shadow" style={{ width: "300px" }}>
+      <div className="bg-light p-4 shadow rounded-3" style={{ width: "300px" }}>
         <div className="text-center">
           <p className="text-muted">No student data found</p>
         </div>

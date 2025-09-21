@@ -31,13 +31,11 @@ const StatusCheck = () => {
       setResult(res.data);
     } catch (err) {
       setResult(null);
-      if (err.response?.status === 404) {
+      if (err.response?.status === 404)
         setError("⚠️ No application found for this email.");
-      } else if (err.response?.status >= 500) {
-        setError("⚠️ Server error. Please try again later.");
-      } else {
-        setError("⚠️ An error occurred. Please try again.");
-      }
+      else if (err.response?.status >= 500)
+        setError("⚠️ Server error. Try again later.");
+      else setError("⚠️ An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +44,6 @@ const StatusCheck = () => {
   const handlePrint = () => {
     const printContent = document.getElementById("status-card");
     const printWindow = window.open("", "_blank", "height=800,width=1000");
-
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -55,10 +52,8 @@ const StatusCheck = () => {
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
           <style>
             body { padding: 20px; background-color: white; }
-            @media print {
-              .no-print { display: none; }
-              .card { border: none; box-shadow: none; }
-            }
+            @media print { .no-print { display: none; } .card { border: none; box-shadow: none; } }
+            iframe { width: 100%; height: 500px; border: none; }
           </style>
         </head>
         <body>
@@ -66,7 +61,6 @@ const StatusCheck = () => {
         </body>
       </html>
     `);
-
     printWindow.document.close();
     setTimeout(() => {
       printWindow.print();
@@ -96,25 +90,69 @@ const StatusCheck = () => {
       case "rejected":
         return "NOT ACCEPTED";
       default:
-        return status.toUpperCase();
+        return status?.toUpperCase();
     }
+  };
+
+  // Robust file rendering for Cloudinary objects
+  const renderFile = (fileData) => {
+    if (!fileData) return <span className="text-muted">N/A</span>;
+
+    let fileUrl = "";
+
+    // Handle string URL
+    if (typeof fileData === "string") {
+      fileUrl = fileData;
+    }
+    // Handle Cloudinary object
+    else if (fileData.secure_url) {
+      fileUrl = fileData.secure_url;
+    } else if (fileData.url) {
+      fileUrl = fileData.url;
+    }
+    // Handle nested objects (e.g., jamb.resultFile, olevel.resultFile)
+    else if (fileData.resultFile) {
+      if (typeof fileData.resultFile === "string")
+        fileUrl = fileData.resultFile;
+      else if (fileData.resultFile.secure_url)
+        fileUrl = fileData.resultFile.secure_url;
+      else if (fileData.resultFile.url) fileUrl = fileData.resultFile.url;
+    }
+
+    if (!fileUrl || typeof fileUrl !== "string")
+      return <span className="text-muted">N/A</span>;
+
+    const ext = fileUrl.split(".").pop().toLowerCase();
+
+    if (ext === "pdf") {
+      return (
+        <iframe
+          src={fileUrl}
+          title="document"
+          style={{ width: "100%", height: "400px", border: "none" }}
+        />
+      );
+    }
+
+    return (
+      <img
+        src={fileUrl}
+        alt="uploaded file"
+        style={{ maxWidth: "100%", borderRadius: "8px" }}
+      />
+    );
   };
 
   return (
     <Container className="py-5">
-      {/* Header Section */}
       <div className="text-center mb-5">
-        <i
-          className="bi bi-file-earmark-person display-4 text-success"
-          aria-hidden="true"
-        ></i>
+        <i className="bi bi-file-earmark-person display-4 text-success"></i>
         <h1 className="h2 fw-bold mt-3">Application Status Check</h1>
         <p className="text-muted">
           Enter your application email to check your admission status
         </p>
       </div>
 
-      {/* Form */}
       <Row className="justify-content-center">
         <Col md={8} lg={6}>
           <Form onSubmit={handleCheckStatus} className="mb-4">
@@ -129,19 +167,10 @@ const StatusCheck = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                aria-label="Application email"
               />
-              <Button
-                variant="success"
-                type="submit"
-                disabled={isLoading}
-                className="d-flex align-items-center"
-              >
+              <Button variant="success" type="submit" disabled={isLoading}>
                 {isLoading ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    Checking...
-                  </>
+                  <Spinner animation="border" size="sm" className="me-2" />
                 ) : (
                   <>
                     <i className="bi bi-search me-2"></i>Check Status
@@ -151,20 +180,15 @@ const StatusCheck = () => {
             </InputGroup>
           </Form>
 
-          {/* Error Alert */}
           {error && (
             <Alert variant="danger" className="d-flex align-items-center">
-              <i
-                className="bi bi-exclamation-triangle-fill me-2"
-                aria-hidden="true"
-              ></i>
-              <span>{error}</span>
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              {error}
             </Alert>
           )}
         </Col>
       </Row>
 
-      {/* Result */}
       {result && (
         <Row className="justify-content-center">
           <Col lg={10}>
@@ -173,14 +197,19 @@ const StatusCheck = () => {
               className="shadow-lg border-0 rounded-4 overflow-hidden mb-5"
             >
               <Card.Body className="p-4">
-                {/* Header Section */}
+                {/* Header */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-bottom pb-3 mb-4">
                   <div className="d-flex align-items-center mb-3 mb-md-0">
                     {result.passport && (
                       <div className="me-3">
                         <img
-                          src={`http://localhost:5000/uploads/${result.passport}`}
-                          alt={`Passport of ${result.firstName} ${result.lastName}`}
+                          src={
+                            typeof result.passport === "string"
+                              ? result.passport
+                              : result.passport.secure_url ||
+                                result.passport.url
+                          }
+                          alt="passport"
                           className="rounded-circle shadow"
                           style={{
                             width: "80px",
@@ -199,7 +228,7 @@ const StatusCheck = () => {
                   </div>
                   <Badge
                     bg={getStatusVariant(result.applicationStatus)}
-                    className="fs-6 px-3 py-2 align-self-start align-self-md-center"
+                    className="fs-6 px-3 py-2"
                   >
                     {getStatusText(result.applicationStatus)}
                   </Badge>
@@ -221,83 +250,48 @@ const StatusCheck = () => {
                   </Col>
                 </Row>
 
-                {/* Applied Date and Print Button */}
+                {/* Applied Date & Print */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-top pt-3 mt-4">
                   <p className="text-muted mb-2 mb-md-0">
-                    <i className="bi bi-calendar me-1" aria-hidden="true"></i>
-                    Applied on {new Date(result.createdAt).toLocaleDateString()}
+                    <i className="bi bi-calendar me-1"></i>Applied on{" "}
+                    {new Date(result.createdAt).toLocaleDateString()}
                   </p>
                   <Button
                     variant="outline-success"
                     onClick={handlePrint}
                     className="no-print"
                   >
-                    <i className="bi bi-printer me-2" aria-hidden="true"></i>
-                    Print
+                    <i className="bi bi-printer me-2"></i>Print
                   </Button>
                 </div>
 
-                {/* O'Level Results */}
+                {/* O'Level */}
                 {result.olevel && (
                   <div className="mt-5">
                     <h5 className="fw-bold">
-                      <i
-                        className="bi bi-journal-text me-2"
-                        aria-hidden="true"
-                      ></i>
-                      O'Level Results
+                      <i className="bi bi-journal-text me-2"></i>O'Level Results
                     </h5>
-                    <p>
-                      <strong>Exam Number:</strong>{" "}
-                      {result.olevel.examNumber || "N/A"}
-                    </p>
-                    {result.olevel.subjects?.length > 0 && (
-                      <div className="table-responsive">
-                        <table className="table table-bordered">
-                          <thead className="table-light">
-                            <tr>
-                              <th>Subject</th>
-                              <th>Grade</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {result.olevel.subjects.map((s, idx) => (
-                              <tr key={idx}>
-                                <td>{s.subject}</td>
-                                <td>
-                                  <span className="badge bg-info">
-                                    {s.grade}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                    {renderFile(result.olevel)}
                   </div>
                 )}
 
-                {/* JAMB Info */}
+                {/* JAMB */}
                 {result.jamb && (
                   <div className="mt-5">
                     <h5 className="fw-bold">
-                      <i
-                        className="bi bi-pencil-square me-2"
-                        aria-hidden="true"
-                      ></i>
-                      JAMB Details
+                      <i className="bi bi-pencil-square me-2"></i>JAMB Details
                     </h5>
-                    <p>
-                      <strong>Reg Number:</strong>{" "}
-                      {result.jamb.regNumber || "N/A"}
-                    </p>
-                    <p>
-                      <strong>Score:</strong>{" "}
-                      <span className="badge bg-primary">
-                        {result.jamb.score || "N/A"}
-                      </span>
-                    </p>
+                    {renderFile(result.jamb)}
+                  </div>
+                )}
+
+                {/* Fee Receipt */}
+                {result.receipt && (
+                  <div className="mt-5">
+                    <h5 className="fw-bold">
+                      <i className="bi bi-receipt me-2"></i>Payment Receipt
+                    </h5>
+                    {renderFile(result.receipt)}
                   </div>
                 )}
               </Card.Body>
